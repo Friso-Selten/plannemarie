@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Annemaries onderzoeksplanner</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-background-primary: #ffffff;
+      --color-background-secondary: #f5f5f4;
+      --color-background-tertiary: #ebebea;
+      --color-background-info: #e6f1fb;
+      --color-text-primary: #1a1a18;
+      --color-text-secondary: #6b6b68;
+      --color-text-tertiary: #a0a09e;
+      --color-border-tertiary: rgba(0,0,0,0.1);
+      --color-border-secondary: rgba(0,0,0,0.18);
+      --color-border-primary: rgba(0,0,0,0.28);
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-background-primary: #1c1c1a;
+        --color-background-secondary: #282826;
+        --color-background-tertiary: #333331;
+        --color-background-info: #0c2a40;
+        --color-text-primary: #f0efec;
+        --color-text-secondary: #a0a09e;
+        --color-text-tertiary: #6b6b68;
+        --color-border-tertiary: rgba(255,255,255,0.1);
+        --color-border-secondary: rgba(255,255,255,0.18);
+        --color-border-primary: rgba(255,255,255,0.28);
+      }
+    }
+    body {
+      font-family: var(--font-sans);
+      color: var(--color-text-primary);
+      background: var(--color-background-tertiary);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .page { max-width: 900px; margin: 0 auto; background: var(--color-background-primary); border-radius: var(--border-radius-lg); padding: 2rem; border: 0.5px solid var(--color-border-tertiary); }
+    h1 { font-size: 20px; font-weight: 500; margin-bottom: 1.5rem; }
+    h3 { font-size: 14px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+    .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 0.75rem 1rem; }
+    .metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+    .metric-value { font-size: 22px; font-weight: 500; }
+    .metric-value.ok { color: #0F6E56; }
+    .metric-value.over { color: #0F6E56; }
+    .metric-value.under { color: #A32D2D; }
+    .section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+    .row-header { display: grid; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 6px; font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
+    .row { display: grid; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+    .row:last-child { border-bottom: none; }
+    input[type=number], input[type=text] { width: 100%; font-size: 13px; padding: 5px 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); }
+    input[type=number]:focus, input[type=text]:focus { outline: none; border-color: #378ADD; }
+    .del-btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: 4px; }
+    .del-btn:hover { color: #A32D2D; background: #FCEBEB; }
+    .add-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 5px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: none; cursor: pointer; color: var(--color-text-primary); margin-top: 8px; }
+    .add-btn:hover { background: var(--color-background-secondary); }
+    .target-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+    .target-row label { font-size: 14px; color: var(--color-text-secondary); white-space: nowrap; }
+    .target-row input { max-width: 160px; font-size: 15px; font-weight: 500; }
+    .cdot { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; display: inline-block; }
+    .cdot.active { border-color: var(--color-text-primary); }
+    .cdot.taken { opacity: 0.25; cursor: not-allowed; pointer-events: none; }
+    .color-dots { display: flex; gap: 4px; flex-wrap: wrap; }
+    .drag-handle { cursor: grab; color: var(--color-text-tertiary); padding: 0 4px; font-size: 16px; display: flex; align-items: center; user-select: none; }
+    .drag-handle:active { cursor: grabbing; }
+    .row.drag-over { border-top: 2px solid #378ADD; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 1rem; }
+    .tab { padding: 6px 16px; border-radius: var(--border-radius-md); font-size: 13px; border: 0.5px solid var(--color-border-secondary); background: none; cursor: pointer; color: var(--color-text-secondary); }
+    .tab:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+    .tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); font-weight: 500; border-color: var(--color-border-secondary); box-shadow: inset 0 -2.5px 0 var(--color-text-primary); }
+    .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .tool-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); cursor: pointer; color: var(--color-text-primary); font-weight: 400; white-space: nowrap; height: 32px; }
+    .tool-btn:hover { background: var(--color-background-tertiary); }
+    .progress-bar { height: 6px; border-radius: 99px; background: var(--color-background-secondary); overflow: hidden; margin-top: 6px; }
+    .progress-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
+    .note { font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; }
+    table.matrix { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.matrix th { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-align: center; padding: 6px 4px; border-bottom: 0.5px solid var(--color-border-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
+    table.matrix th.left { text-align: left; }
+    table.matrix td { padding: 5px 4px; border-bottom: 0.5px solid var(--color-border-tertiary); text-align: center; vertical-align: middle; }
+    table.matrix td.name-cell { text-align: left; font-weight: 500; font-size: 13px; white-space: nowrap; }
+    table.matrix td.rate-cell { color: var(--color-text-secondary); font-size: 12px; white-space: nowrap; }
+    table.matrix td.total-cell { font-weight: 500; }
+    table.matrix td.cost-cell { font-weight: 500; color: #185FA5; font-size: 12px; }
+    table.matrix tr:last-child td { border-bottom: none; }
+    table.matrix tr.sum-row td { background: var(--color-background-secondary); font-weight: 500; border-top: 0.5px solid var(--color-border-secondary); }
+    .day-input-wrap { display: inline-flex; align-items: center; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); overflow: hidden; background: transparent; }
+    .day-input-wrap button { background: none; border: none; cursor: pointer; color: var(--color-text-tertiary); font-size: 11px; padding: 3px 5px; line-height: 1; }
+    .day-input-wrap button:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+    .day-input-wrap input[type=number] { width: 40px; border: none; border-radius: 0; padding: 3px 2px; font-size: 13px; text-align: center; background: transparent; color: var(--color-text-primary); outline: none; -moz-appearance: textfield; box-shadow: none; }
+    .day-input-wrap input[type=number]::-webkit-outer-spin-button,
+    .day-input-wrap input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .day-input-wrap input[type=number].zero { color: var(--color-text-tertiary); }
+    .day-input-wrap input[type=number]:focus { background: var(--color-background-secondary); }
+    @media (max-width: 600px) {
+      .page { padding: 1rem; }
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+      .summary-grid .metric:last-child { grid-column: span 2; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <h1>Annemaries onderzoeksplanner</h1>
+  <div class="target-row">
+    <label>Doelbudget (€)</label>
+    <input type="number" id="target" value="100000" step="1000" min="0" onchange="renderMatrix();updateSummary();">
+  </div>
+  <div class="summary-grid">
+    <div class="metric"><div class="metric-label">Totaal kosten</div><div class="metric-value" id="sum-cost">€0</div></div>
+    <div class="metric"><div class="metric-label">Verschil</div><div class="metric-value" id="sum-diff">—</div></div>
+    <div class="metric"><div class="metric-label">Totaal dagen</div><div class="metric-value" id="sum-days">0</div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-matrix" onclick="switchTab('matrix')">Dagenverdeling</button>
+    <button class="tab" id="tab-btn-setup" onclick="switchTab('setup')">Onderzoekers &amp; activiteiten</button>
+  </div>
+  <div id="tab-matrix" class="section">
+    <div class="toolbar">
+      <button class="tool-btn" onclick="applySuggestion()"><i class="ti ti-sparkles" aria-hidden="true"></i> Plannemarie</button>
+      <button class="tool-btn" onclick="clearAll()"><i class="ti ti-refresh" aria-hidden="true"></i> Leegmaken</button>
+      <button class="tool-btn" onclick="doExport()"><i class="ti ti-download" aria-hidden="true"></i> Exporteer als Excel</button>
+    </div>
+    <div id="matrix-wrap"></div>
+  </div>
+  <div id="tab-setup" style="display:none">
+    <div class="section">
+      <h3>Onderzoekers</h3>
+      <div id="researchers-list"></div>
+      <button class="add-btn" onclick="addResearcher()"><i class="ti ti-plus" aria-hidden="true"></i> Onderzoeker toevoegen</button>
+    </div>
+    <div class="section">
+      <h3>Activiteiten</h3>
+      <div id="activities-list"></div>
+      <button class="add-btn" onclick="addActivity()"><i class="ti ti-plus" aria-hidden="true"></i> Activiteit toevoegen</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const COLORS=['#1D9E75','#378ADD','#D85A30','#D4537E','#7F77DD','#BA7517','#639922','#888780'];
+const COLOR_LIGHT=['#E1F5EE','#E6F1FB','#FAECE7','#FBEAF0','#EEEDFE','#FAEEDA','#EAF3DE','#F1EFE8'];
+const COLOR_LIGHT_XL=['E1F5EE','E6F1FB','FAECE7','FBEAF0','EEEDFE','FAEEDA','EAF3DE','F1EFE8'];
+
+let researchers=[
+  {id:1,name:'Onderzoeker 1',rate:2050,color:0},
+  {id:2,name:'Onderzoeker 2',rate:1450,color:1},
+  {id:3,name:'Onderzoeker 3',rate:1250,color:2},
+  {id:4,name:'Onderzoeker 4',rate:1650,color:3},
+];
+let activities=[
+  {id:1,name:'Startgesprek'},
+  {id:2,name:'Documentstudie'},
+  {id:3,name:'Interviews'},
+  {id:4,name:'Analyse'},
+  {id:5,name:'Schrijven'},
+];
+let days={};
+let nextRId=5,nextAId=6;
+
+function key(rId,aId){return `${rId}_${aId}`;}
+function getVal(rId,aId){return days[key(rId,aId)]||0;}
+function setVal(rId,aId,v){days[key(rId,aId)]=isNaN(v)||v<0?0:Math.round(v*4)/4;}
+function fmtN(n){n=Math.round(n*100)/100;if(n===Math.floor(n))return n===0?'0':String(Math.floor(n));return n.toFixed(2).replace(/0+$/,'');}
+function fmtEur(n){return '€'+Math.round(n).toLocaleString('nl-NL');}
+function totalDays(rId){return activities.reduce((s,a)=>s+getVal(rId,a.id),0);}
+function totalCost(rId){const r=researchers.find(x=>x.id===rId);return r?totalDays(rId)*r.rate:0;}
+function actDays(aId){return researchers.reduce((s,r)=>s+getVal(r.id,aId),0);}
+function grandCost(){return researchers.reduce((s,r)=>s+totalCost(r.id),0);}
+function grandDays(){return researchers.reduce((s,r)=>s+totalDays(r.id),0);}
+function clearAll(){days={};renderMatrix();updateSummary();}
+
+function activityWeight(name){
+  const n=name.toLowerCase();
+  if(/start|kick.?off|intake|brief|opstart|opening|aftrap/.test(n))return 0.5;
+  if(/document|literatuur|bron|desk|archief|studie|review|lezen/.test(n))return 1.5;
+  if(/interview|gesprek|veldwerk|observat|enquete|survey|focus/.test(n))return 2.5;
+  if(/analys|reconstruct|reflect|synthes|coder|interpret|bevinding|verwerk/.test(n))return 2.5;
+  if(/schrijf|schrijven|rapport|verslag|redact|tekst|publicat|artikel/.test(n))return 2.0;
+  if(/toets|valid|check|feedback|beoordel|kwaliteit/.test(n))return 1.0;
+  if(/present|oplever|afslu|afronding|eindpres/.test(n))return 0.75;
+  return 2.0;
+}
+
+function applySuggestion(){
+  const target=parseFloat(document.getElementById('target').value)||100000;
+  if(!researchers.length||!activities.length)return;
+  const actWeights=activities.map(a=>activityWeight(a.name));
+  const actWeightSum=actWeights.reduce((s,w)=>s+w,0);
+  const maxRate=Math.max(...researchers.map(r=>r.rate));
+  const rWeights=researchers.map(r=>maxRate/r.rate);
+  const rWeightSum=rWeights.reduce((s,w)=>s+w,0);
+  const newDays={};
+  researchers.forEach((r,ri)=>{
+    const rShare=rWeights[ri]/rWeightSum;
+    const rDays=rShare*target/r.rate;
+    activities.forEach((a,ai)=>{newDays[key(r.id,a.id)]=Math.round(rDays*(actWeights[ai]/actWeightSum)*4)/4;});
+  });
+  const costAfter=researchers.reduce((s,r)=>s+activities.reduce((ss,a)=>ss+(newDays[key(r.id,a.id)]||0)*r.rate,0),0);
+  const diff=target-costAfter;
+  if(Math.abs(diff)>=0.25){
+    const cheapest=researchers.reduce((a,b)=>a.rate<b.rate?a:b);
+    const heaviestIdx=actWeights.indexOf(Math.max(...actWeights));
+    const k=key(cheapest.id,activities[heaviestIdx].id);
+    newDays[k]=Math.max(0,(newDays[k]||0)+Math.round(diff/cheapest.rate*4)/4);
+  }
+  days=newDays;renderMatrix();updateSummary();
+}
+
+function updateSummary(){
+  const target=parseFloat(document.getElementById('target').value)||0;
+  const cost=grandCost(),diff=cost-target;
+  const dEl=document.getElementById('sum-diff');
+  document.getElementById('sum-cost').textContent=fmtEur(cost);
+  document.getElementById('sum-days').textContent=fmtN(grandDays());
+  if(Math.abs(diff)<0.01){dEl.textContent='✓ Exact';dEl.className='metric-value ok';}
+  else if(diff<0){dEl.textContent=fmtEur(Math.abs(diff))+' over';dEl.className='metric-value over';}
+  else{dEl.textContent=fmtEur(diff)+' teveel';dEl.className='metric-value under';}
+}
+
+function stepDay(rId,aId,delta){
+  let v=getVal(rId,aId)+delta;if(v<0)v=0;
+  setVal(rId,aId,v);
+  const inp=document.getElementById(`cell_${rId}_${aId}`);
+  if(inp){const val=getVal(rId,aId);inp.value=fmtN(val);inp.className=val===0?'zero':'';}
+  updateTotals(rId,aId);
+}
+function onCellChange(rId,aId,inp){
+  setVal(rId,aId,parseFloat(inp.value));
+  const val=getVal(rId,aId);
+  inp.value=fmtN(val);
+  inp.className=val===0?'zero':'';
+  updateTotals(rId,aId);
+}
+
+function updateTotals(rId,aId){
+  const td=document.getElementById(`rtotal_${rId}`);if(td)td.textContent=fmtN(totalDays(rId));
+  const tc=document.getElementById(`rcost_${rId}`);if(tc)tc.textContent=fmtEur(totalCost(rId));
+  const ad=document.getElementById(`atotal_${aId}`);if(ad)ad.textContent=fmtN(actDays(aId));
+  const gd=document.getElementById('grand-days');if(gd)gd.textContent=fmtN(grandDays());
+  const gc=document.getElementById('grand-cost');if(gc)gc.textContent=fmtEur(grandCost());
+  updateSummary();updateProgressBar();
+}
+
+function updateProgressBar(){
+  const target=parseFloat(document.getElementById('target').value)||0,cost=grandCost();
+  const pct=target>0?Math.min(cost/target,1.5):0;
+  const barColor=Math.abs(cost-target)<target*0.01?'#1D9E75':cost>target?'#A32D2D':'#378ADD';
+  const fill=document.getElementById('prog-fill'),note=document.getElementById('prog-note');
+  if(fill){fill.style.width=Math.min(pct*100,100).toFixed(1)+'%';fill.style.background=barColor;}
+  if(note&&target>0)note.textContent=`${fmtEur(cost)} van ${fmtEur(target)} doelbudget (${(cost/target*100).toFixed(1)}%)`;
+}
+
+function renderMatrix(){
+  const w=document.getElementById('matrix-wrap');
+  if(!researchers.length||!activities.length){w.innerHTML='<p style="font-size:13px;color:var(--color-text-secondary);padding:0.5rem 0">Voeg onderzoekers en activiteiten toe.</p>';return;}
+  let html='<div style="overflow-x:auto"><table class="matrix"><thead><tr>';
+  html+='<th class="left" style="min-width:110px">Onderzoeker</th><th style="min-width:64px">Tarief</th>';
+  activities.forEach(a=>{html+=`<th title="${a.name}">${a.name}</th>`;});
+  html+='<th>Dagen</th><th>Kosten</th></tr></thead><tbody>';
+  researchers.forEach(r=>{
+    const bg=COLOR_LIGHT[r.color%COLOR_LIGHT.length];
+    html+=`<tr><td class="name-cell" style="background:${bg}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${COLORS[r.color%COLORS.length]};margin-right:6px;vertical-align:middle"></span>${r.name}</td>`;
+    html+=`<td class="rate-cell" style="background:${bg}">€${r.rate.toLocaleString('nl-NL')}</td>`;
+    activities.forEach(a=>{
+      const v=getVal(r.id,a.id);
+      html+=`<td style="background:${bg}"><div class="day-input-wrap"><button onclick="stepDay(${r.id},${a.id},-0.25)" tabindex="-1">−</button><input id="cell_${r.id}_${a.id}" type="number" value="${fmtN(v)}" class="${v===0?'zero':''}" step="0.25" min="0" onchange="onCellChange(${r.id},${a.id},this)" onblur="onCellChange(${r.id},${a.id},this)" onfocus="if(parseFloat(this.value)===0)this.value=''" style="background:transparent"><button onclick="stepDay(${r.id},${a.id},0.25)" tabindex="-1">+</button></div></td>`;
+    });
+    html+=`<td class="total-cell" id="rtotal_${r.id}" style="background:${bg}">${fmtN(totalDays(r.id))}</td>`;
+    html+=`<td class="cost-cell" id="rcost_${r.id}" style="background:${bg}">${fmtEur(totalCost(r.id))}</td></tr>`;
+  });
+  html+='<tr class="sum-row"><td class="name-cell">Totaal</td><td></td>';
+  activities.forEach(a=>{html+=`<td id="atotal_${a.id}">${fmtN(actDays(a.id))}</td>`;});
+  html+=`<td id="grand-days">${fmtN(grandDays())}</td><td class="cost-cell" id="grand-cost">${fmtEur(grandCost())}</td></tr>`;
+  html+='</tbody></table></div>';
+  html+=`<div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%;background:#378ADD"></div></div>`;
+  html+=`<div class="note" id="prog-note"></div>`;
+  w.innerHTML=html;updateProgressBar();
+}
+
+function usedColors(){return new Set(researchers.map(r=>r.color));}
+
+function renderSetup(){
+  const rl=document.getElementById('researchers-list');rl.innerHTML='';
+  const hdr=document.createElement('div');hdr.className='row-header';hdr.style.gridTemplateColumns='20px 1fr 100px 110px 24px';
+  hdr.innerHTML='<span></span><span>Naam</span><span>Tarief/dag</span><span>Kleur</span><span></span>';rl.appendChild(hdr);
+  const taken=usedColors();
+  researchers.forEach((r,i)=>{
+    const div=document.createElement('div');div.className='row';div.style.gridTemplateColumns='20px 1fr 100px 110px 24px';
+    div.setAttribute('draggable','true');div.dataset.type='researcher';div.dataset.idx=i;
+    const dots=COLORS.map((c,ci)=>{
+      const isActive=r.color===ci;
+      const isTaken=!isActive&&taken.has(ci);
+      return `<div class="cdot${isActive?' active':''}${isTaken?' taken':''}" style="background:${c}" onclick="setResearcherColor(${i},${ci})"></div>`;
+    }).join('');
+    div.innerHTML=`<span class="drag-handle" title="Versleep om te herordenen"><i class="ti ti-grip-vertical"></i></span><input type="text" value="${r.name}" onchange="researchers[${i}].name=this.value;renderMatrix()"><div style="display:flex;align-items:center;gap:4px;font-size:13px"><span style="color:var(--color-text-secondary)">€</span><input type="number" value="${r.rate}" min="0" step="50" onchange="researchers[${i}].rate=parseInt(this.value)||0;renderMatrix();updateSummary();" style="width:72px"></div><div class="color-dots">${dots}</div><button class="del-btn" onclick="delResearcher(${r.id})"><i class="ti ti-x"></i></button>`;
+    addDragEvents(div,'researchers');
+    rl.appendChild(div);
+  });
+
+  const al=document.getElementById('activities-list');al.innerHTML='';
+  activities.forEach((a,i)=>{
+    const div=document.createElement('div');div.className='row';div.style.gridTemplateColumns='20px 1fr 24px';
+    div.setAttribute('draggable','true');div.dataset.type='activity';div.dataset.idx=i;
+    div.innerHTML=`<span class="drag-handle" title="Versleep om te herordenen"><i class="ti ti-grip-vertical"></i></span><input type="text" value="${a.name}" onchange="activities[${i}].name=this.value;renderMatrix()"><button class="del-btn" onclick="delActivity(${a.id})"><i class="ti ti-x"></i></button>`;
+    addDragEvents(div,'activities');
+    al.appendChild(div);
+  });
+}
+
+function setResearcherColor(i,ci){
+  const taken=usedColors();
+  if(taken.has(ci)&&researchers[i].color!==ci)return;
+  researchers[i].color=ci;renderSetup();renderMatrix();
+}
+
+let dragSrc=null,dragList=null;
+function addDragEvents(el,listName){
+  el.addEventListener('dragstart',e=>{dragSrc=el;dragList=listName;el.style.opacity='0.4';e.dataTransfer.effectAllowed='move';});
+  el.addEventListener('dragend',e=>{el.style.opacity='';document.querySelectorAll('.row.drag-over').forEach(r=>r.classList.remove('drag-over'));});
+  el.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';if(el!==dragSrc&&dragList===listName){el.classList.add('drag-over');}});
+  el.addEventListener('dragleave',e=>{el.classList.remove('drag-over');});
+  el.addEventListener('drop',e=>{
+    e.preventDefault();el.classList.remove('drag-over');
+    if(!dragSrc||el===dragSrc||dragList!==listName)return;
+    const from=parseInt(dragSrc.dataset.idx),to=parseInt(el.dataset.idx);
+    if(listName==='researchers'){const tmp=researchers.splice(from,1)[0];researchers.splice(to,0,tmp);}
+    else{const tmp=activities.splice(from,1)[0];activities.splice(to,0,tmp);}
+    renderSetup();renderMatrix();
+  });
+}
+
+function addResearcher(){researchers.push({id:nextRId++,name:`Onderzoeker ${researchers.length+1}`,rate:1500,color:researchers.length%COLORS.length});renderSetup();renderMatrix();updateSummary();}
+function delResearcher(id){if(researchers.length<=1)return;researchers=researchers.filter(r=>r.id!==id);renderSetup();renderMatrix();updateSummary();}
+function addActivity(){activities.push({id:nextAId++,name:`Activiteit ${activities.length+1}`});renderSetup();renderMatrix();updateSummary();}
+function delActivity(id){if(activities.length<=1)return;activities=activities.filter(a=>a.id!==id);renderSetup();renderMatrix();updateSummary();}
+
+function switchTab(t){
+  document.getElementById('tab-matrix').style.display=t==='matrix'?'block':'none';
+  document.getElementById('tab-setup').style.display=t==='setup'?'block':'none';
+  document.getElementById('tab-btn-matrix').className='tab'+(t==='matrix'?' active':'');
+  document.getElementById('tab-btn-setup').className='tab'+(t==='setup'?' active':'');
+}
+
+function doExport(){
+  if(typeof XLSX==='undefined'){alert('Excel-bibliotheek nog niet geladen, probeer opnieuw.');return;}
+  const target=parseFloat(document.getElementById('target').value)||0;
+  const nc=2+activities.length+2;
+  const aoa=[['Onderzoeker','Tarief (€/dag)',...activities.map(a=>a.name),'Totaal dagen','Totaal kosten (€)']];
+  researchers.forEach(r=>{const row=[r.name,r.rate];activities.forEach(a=>row.push(getVal(r.id,a.id)));row.push(totalDays(r.id),totalCost(r.id));aoa.push(row);});
+  const dRow=['Totaal dagen',''];activities.forEach(a=>dRow.push(actDays(a.id)));dRow.push(grandDays(),'');aoa.push(dRow);
+  const cRow=['Totaal kosten (€)',''];activities.forEach(a=>cRow.push(researchers.reduce((s,r)=>s+getVal(r.id,a.id)*r.rate,0)));cRow.push('',grandCost());aoa.push(cRow);
+  aoa.push([],['Doelbudget (€)',target],['Totaal kosten (€)',grandCost()],['Verschil (€)',grandCost()-target]);
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  const thin={style:'thin',color:{rgb:'D0D0D0'}};
+  for(let R=0;R<aoa.length;R++){for(let C=0;C<nc;C++){const addr=XLSX.utils.encode_cell({r:R,c:C});if(!ws[addr])ws[addr]={t:'z'};if(!ws[addr].s)ws[addr].s={};ws[addr].s.border={top:thin,bottom:thin,left:thin,right:thin};ws[addr].s.alignment={horizontal:C===0?'left':'center',vertical:'center'};if(R===0){ws[addr].s.font={bold:true,color:{rgb:'FFFFFF'},sz:10};ws[addr].s.fill={fgColor:{rgb:'1F3864'}};}else if(R>=1&&R<=researchers.length){const clr=COLOR_LIGHT_XL[researchers[R-1].color%COLOR_LIGHT_XL.length];ws[addr].s.fill={fgColor:{rgb:clr}};if(C===0)ws[addr].s.font={bold:true,sz:10};if(ws[addr].t==='n'){if(C===1||C===nc-1)ws[addr].z='€#,##0';else ws[addr].z='#,##0.##';}if(C===nc-1&&ws[addr].t==='n')ws[addr].s.font={bold:true,color:{rgb:'185FA5'},sz:10};}else if(R===researchers.length+1){ws[addr].s.fill={fgColor:{rgb:'DEEAF1'}};ws[addr].s.font={bold:true,sz:10};if(ws[addr].t==='n')ws[addr].z='#,##0.##';}else if(R===researchers.length+2){ws[addr].s.fill={fgColor:{rgb:'E2EFDA'}};ws[addr].s.font={bold:true,sz:10};if(ws[addr].t==='n')ws[addr].z='€#,##0';if(C===nc-1)ws[addr].s.fill={fgColor:{rgb:'C6EFCE'}};}}}
+  ws['!cols']=[{wch:20},{wch:14},...activities.map(()=>({wch:13})),{wch:12},{wch:17}];
+  XLSX.utils.book_append_sheet(wb,ws,'Urenplanning');
+  XLSX.writeFile(wb,'urenplanning.xlsx');
+}
+
+renderSetup();renderMatrix();updateSummary();
+</script>
+</body>
+</html>
